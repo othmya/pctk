@@ -97,3 +97,13 @@ Any of these commands will generate one or many .pov files. If you have povray i
 povray -W720 -H680 -a [path to pov file]
 ~~~~
 to render the .pov file a generate an image. Parameters -H -W and -a correspond to Width, heigh and antilaizing, respectively.
+
+
+### misc: project_loader
+
+*project_loader.py* is a small script that wraps the "make reset" and "make data-cleanup" commands from PhysiCell. It is also able to run a specific project.
+
+#### Example
+~~~~
+project_loader.py /my/absolute/path/to/PhysiBoSSv2/ template_BM
+~~~~
