@@ -8,13 +8,11 @@ import xml.etree.ElementTree as ET
 __author__ = "Miguel Ponce de Leon"
 __copyright__ = "Copyright 2020, Tools for PhysiCell project"
 __credits__ = ["Miguel Ponce de Leon"]
-__license__ = "GNU"
+__license__ = "GPL 3.0"
 __version__ = "0.1.0"
 __maintainer__ = "Miguel Ponce de Leon"
 __email__ = "miguel.ponce@bsc.es"
 __status__ = "dev"
-
-
 
 default_phases_dict = {
     0: "Ki67_positive_premitotic",
@@ -158,7 +156,7 @@ class MultiCellDS(object):
             if size == 1:
                 cell_columns.append(column)
                 continue
-            for i, v in enumerate(['x', 'y', 'x']):
+            for i, v in enumerate(['x', 'y', 'z']):
                 cell_columns.append(v + self._separator + column)
                 if i == size: 
                     break
