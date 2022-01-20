@@ -1,0 +1,4 @@
+Initial Internal prot_A conc. (mM) = 0.0 um³/min
+Initial External prot_A conc. (mM) = 1.0 um³/min
+prot_A Diffusion coefficient (D) (mM) = 120000.0 um³/min
+prot_A Permeability coefficient (k) (mM) = 70.0 um³/min

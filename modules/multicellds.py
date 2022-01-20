@@ -8,11 +8,13 @@ import xml.etree.ElementTree as ET
 __author__ = "Miguel Ponce de Leon"
 __copyright__ = "Copyright 2020, Tools for PhysiCell project"
 __credits__ = ["Miguel Ponce de Leon"]
-__license__ = "GPL 3.0"
+__license__ = "GNU"
 __version__ = "0.1.0"
 __maintainer__ = "Miguel Ponce de Leon"
 __email__ = "miguel.ponce@bsc.es"
 __status__ = "dev"
+
+
 
 default_phases_dict = {
     0: "Ki67_positive_premitotic",
@@ -156,7 +158,7 @@ class MultiCellDS(object):
             if size == 1:
                 cell_columns.append(column)
                 continue
-            for i, v in enumerate(['x', 'y', 'z']):
+            for i, v in enumerate(['x', 'y', 'x']):
                 cell_columns.append(v + self._separator + column)
                 if i == size: 
                     break
@@ -286,12 +288,47 @@ class MultiCellDS(object):
             time = self.get_time(tree)
             yield (time, microenv_matrix)
 
+    def full_cell_info_df(self, group_by_time=False):  # TODO: Could add an output_path_parameter?
+        """
+        Obtain a pandas.DataFrame that contains, for each cell, and at each PhysiCell full_data save timestep,
+        all "cellular_information" elements from the output XML files.
+            - The group_by_time option provides one row per timestep in the returned dataframe that includes the
+              mean for all cells for all cellular information. This is especially relevant for plotting purposes.
+        A .csv file with all the information is also stored within the PhysiBoSS/PhysiCell output folder.
+        """
+
+        output_path = self._output_folder
+        xml_list = sorted(glob.glob(self._globing))
+        total_rows = []
+        cols = self._cell_columns + ["Time (min)"]
+
+        for xml_fname in xml_list:
+            tree = ET.parse(xml_fname)
+            cell_matrix = self.get_cells_matrix(tree)
+            time = round(self.get_time(tree), 2)  # If not rounded, provides int instead of float
+
+            list_elements = [element[0] for element in cell_matrix.T]
+            list_elements.append(time)
+            total_rows.append(list_elements)
+
+        df = pd.DataFrame(total_rows, columns=cols)
+
+        if group_by_time == False:  # Returns full dataframe
+            df.to_csv(f"{output_path}/full_cell_info.csv", encoding="utf-8", header=True)
+            return df
+
+        else:  # Returns a dataframe with mean of all parameters based on the time
+            df_grouped = df.groupby("Time (min)")
+            df_grouped = df_grouped.mean()
+            df_grouped.to_csv(f"{output_path}/full_cell_info_grouped_by_time.csv", encoding="utf-8", header=True)
+            return df_grouped
+
     def get_cells_summary_frame(self, phase_col="current_phase"):
 
         cell_phases = list(set(self.phase_grouping.values()))
         num_of_files = self.cells_file_count()
 
-        # Initializing a Pandas Databrafe to store the data
+        # Initializing a Pandas Dataframe to store the data
         index = range(num_of_files)
         columns = ["time"] + cell_phases
         df_time_course = pd.DataFrame(columns=columns, dtype=int, index=index, data=0)

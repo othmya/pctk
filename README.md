@@ -99,11 +99,41 @@ povray -W720 -H680 -a [path to pov file]
 to render the .pov file a generate an image. Parameters -H -W and -a correspond to Width, heigh and antilaizing, respectively.
 
 
-### misc: project_loader
+## Plots relevant for assessing biological transport mechanism dynamics
 
-*project_loader.py* is a small script that wraps the "make reset" and "make data-cleanup" commands from PhysiCell. It is also able to run a specific project.
+The `transport_plots` folder contains the scripts employed for obtaining 
+specific plots that allow quantitative and qualitative analysis of a specific transport dynamic with specific
+command-line arguments, shown below.
 
-#### Example
 ~~~~
-project_loader.py /my/absolute/path/to/PhysiBoSSv2/ template_BM
+usage: transport_timeseries_plot.py [-h] [--transport_mechanism {simple_diffusion,facilitated_diffusion_carrier}]
+                                    [--join JOIN_PLOTS] [--substrate SUBSTRATE] [--figout FIG_FNAME] [--csvout CSV_FNAME]
+                                    output_folder
+
+Produce different plots for the different transport mechanisms
+
+positional arguments:
+  output_folder         folder were the data is stored, usually the PhysiCell output folder.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --transport_mechanism {simple_diffusion,facilitated_diffusion_carrier}
+                        Type of transport mechanism for which the plots will be produced
+  --join JOIN_PLOTS     Join the different plots into one single figure
+  --substrate SUBSTRATE
+                        Indicate the substrate for which the transport dynamics will be plotted
+  --figout FIG_FNAME    Filename to save the plot
+  --csvout CSV_FNAME    Filename to store the summary table used for the plot
+
 ~~~~
+
+- `plots_parser.py`: Contains the `argparser` arguments setting.
+- `transport_timeseries_plot.py`: Produces various time-course plots referred to specific transport-related variables
+  (e.g. Internal and external substrate density, flux, concentration gradient and net total amount of substrate) along
+a given simulation. It also stores a .txt file that includes relevant information related to the substrate transport mechanism.
+Results are stored within the `plots` subfolder.
+- `substrate_plot.py`: Produces, for each full save time of a PhysiCell simulation, a "substrate plot" that shows a diffusing substrate
+in the microenvironment, along with the agents. It also produces a GIF animation and a grid-plot JPEG with 12 snapshots from said simulations.
+Results are stored within the `transport_gif` subfolder.
+- `pcplotutils.py`: Small set of functions built on top of PhysiCell's [python-loader](https://github.com/PhysiCell-Tools/python-loader) that are employed for obtaining the substrate plots from
+`substrate_plot.py`.
