@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+from cmath import log10
 import imageio, glob, os, sys, plots_parser
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -9,6 +10,7 @@ from pcplotutils import *  # TODO: Use tools4physicell instead of this
 
 modules_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # twice because this script is in a folder within /tools4physicell
+
 modules_path = os.path.join(modules_path, 'modules')
 sys.path.append(modules_path)
 from multicellds import *
@@ -16,6 +18,7 @@ from multicellds import *
 python_loader_path = "/home/oth/anaconda3/lib/python3.8/site-packages/python-loader"
 sys.path.append(python_loader_path)
 from pyMCDS import pyMCDS # importing the class
+
 # TODO: Add python-loader to the tools4physicell venv, cannot do it through pip as it is not in PyPI
 
 # path in which the plots will be stored
@@ -48,6 +51,7 @@ def plot_substrate(mcds, substrate, i, filename_array, type):
     """
 
     t = mcds.get_time()
+    substrate = substrate[0]
     pos_x = mcds.data['discrete_cells']['position_x']
     pos_y = mcds.data['discrete_cells']['position_y']
 
@@ -74,25 +78,37 @@ def plot_substrate(mcds, substrate, i, filename_array, type):
         substrate_conc = mcds.get_concentrations(f'{substrate}')
         X, Y = mcds.get_2D_mesh()
 
+        
         if initial_E_density > initial_I_density:  # ascending or descending color gradient
-            plt.contourf(X, Y, substrate_conc[:, :, 0], cmap='Blues', levels=np.linspace(0.0, initial_E_density, 100))
+            plt.contourf(X, Y, substrate_conc[:, :, 0], cmap='Blues', levels=np.linspace(0.999, 1.0, 100)) #exp A
+            # plt.contourf(X, Y, substrate_conc[:, :, 0], cmap='Blues', levels=np.linspace(0.999, initial_E_density, 100)) #exp B
         else:
-            plt.contourf(X, Y, substrate_conc[:, :, 0], cmap='Blues', levels=np.linspace(initial_E_density, 1.0 + 1e-12, 100))
+            plt.contourf(X, Y, substrate_conc[:, :, 0], cmap='Blues', levels=np.linspace(0.0, actual_E_density + 1e-12, 100))
 
         # TODO: Set properly the colorbars - don't make them dynamic
 
-        plt.colorbar()
+        # plt.colorbar()
 
         # plot agents
+
+     
+
+        if actual_I_density > 1.0:
+            scaling_factor = (log10(initial_I_density)) + 1
+            scaling_factor = int(scaling_factor.real)
+            actual_I_density = 10 * scaling_factor / actual_I_density # TODO: This is a hack to make the plot look better, the value is dependant on the initial I density
+            if actual_I_density > 1.0:
+                actual_I_density = 1.0
+            
         C = np.array([actual_I_density, 0.5, 0.5])
-        scatter_cytoplasm = plt.scatter(pos_x, pos_y, color=C, s=total_volume/25)
-        scatter_nucleus = plt.scatter(pos_x, pos_y, color=(105/255, 105/255, 105/255), s=nuclear_volume/25)
+        scatter_cytoplasm = plt.scatter(pos_x, pos_y, color=C, s=total_volume)
+        scatter_nucleus = plt.scatter(pos_x, pos_y, color=(105/255, 105/255, 105/255), s=nuclear_volume)
         plt.axis('off')
 
-        plt.title("Simulation at t=" + str(round(t, 3)) + " min", size=12)
+        plt.title("Simulation at t=" + str(round(t, 3)) + " min", size=20, loc='left')
         filename = f"{i}.png"
         filename_array.append(filename)
-        plt.savefig(gif_path + f"/{filename}", dpi=100)
+        plt.savefig(gif_path + f"/{filename}", format="png", dpi=200)
 
     elif type == "microenv":
 
@@ -111,7 +127,7 @@ def plot_substrate(mcds, substrate, i, filename_array, type):
         plt.axis('off')
         filename = f"frame_{i}.png"
         filename_array.append(filename)
-        plt.savefig(filename)
+        plt.savefig(filename, format="png", dpi=300)
         plt.close()
 
 
@@ -122,7 +138,7 @@ def substrate_plot_gif(output_folder, output_path, substrate, type="agents_micro
         - output_folder: PhysiCell output folder
         - output_path: Folder in which the subst
     """
-    # TODO: Instead of using functions from pcplotutils.py, which is built on top of PhysiCell's python-loader
+    # TODO: Instead of using functions from pcplotutils.py, which is built on top of PhysiCell's python-loader, just use pctk from Miguel 
 
     filenames = []
 
@@ -148,7 +164,8 @@ def ten_frames_plot(gif_output_folder):
     """
 
     frames = [file for file in os.listdir(gif_output_folder) if file.endswith(".png")]
-    frames_index = sorted([int(frame.split(".png")[0]) for frame in frames])
+    frames_index = sorted([int(frame.split(".png")[0]) for frame in frames if not frame.startswith("ten_")])
+
     ten_frames = []
 
     for i in range(0, 110, 10):
@@ -170,19 +187,23 @@ def ten_frames_plot(gif_output_folder):
 
     plt.tight_layout()
     plt.savefig(gif_path + "/ten_frames.jpg")
+    # save figure in PNG, PNG (transparent), PDF and SVG
+    plt.savefig(gif_path + f"/ten_frames.png", format="png", dpi=200)
+    plt.savefig(gif_path + f"/ten_franes_transparent.png", format="png", dpi=200, transparent=True)
+    plt.savefig(gif_path + f"/ten_frames.pdf", format="pdf", dpi=200)
     sys.stdout.write("Ten frames plot saved succesfully.\n")
 
 
 def delete_substrate_plots(substrate_gif_path):
     """ Deletes substrate plots from gif folder. """
 
-    for file in glob.iglob(f"{substrate_gif_path}*.png"):
+    for file in glob.glob(f"{substrate_gif_path}*.png"):
         os.remove(file)
 
 
 def main():
     delete_substrate_plots(gif_path)
-    substrate_plot_gif(args.output_folder, gif_path, args.substrate, type="agents_microenv")
+    substrate_plot_gif(args.output_folder, gif_path, args.substrates, type="agents_microenv")
     ten_frames_plot(gif_path)
 
 

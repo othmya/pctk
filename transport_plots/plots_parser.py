@@ -19,14 +19,19 @@ def create_parser_transport():
     parser = argparse.ArgumentParser(description="Produce different plots for the different transport mechanisms")
 
     parser.add_argument("--transport_mechanism", action="store", dest="transport",
-                        choices=("simple_diffusion", "facilitated_diffusion_carrier"),
+                        choices=("simple_diffusion", "facilitated_diffusion_carrier", "cytotoxic_carrier", "fd_channel",
+                                 "fd_channel_ligand", "fd_channel_voltage", "primary_active", "secondary_active"),
                         help="Type of transport mechanism for which the plots will be produced")
 
     parser.add_argument("--join", action="store", dest="join_plots", default=False,
                         help="Join the different plots into one single figure")
 
-    parser.add_argument("--substrate", action="store", dest="substrate", default=None,
+    parser.add_argument("--justdf", action="store_true", dest="just_df",
+                        help="Join the different plots into one single figure")
+
+    parser.add_argument("--substrates", action="append", dest="substrates", default=None,
                         help="Indicate the substrate for which the transport dynamics will be plotted")
+
 
     parser.add_argument("output_folder", action="store", help="folder were the data is stored, usually the PhysiCell output folder.")
 
